@@ -67,7 +67,7 @@ runs:
 
         if [ -z "$STRING" ]; then
           echo "String extraction failed; no matching value found ❌"
-          if [ "${{ inputs.NO_FAIL }}" = "true" ]; then
+          if [ "f${{ inputs.NO_FAIL }}" = "ftrue" ]; then
             exit 0
           else
             exit 1
