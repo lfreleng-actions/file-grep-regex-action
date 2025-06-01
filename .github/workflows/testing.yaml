@@ -41,6 +41,42 @@ jobs:
           regex: '(?<=^name = ")([^"]*)'
           filename: "test-python-project/pyproject.toml"
 
+      - name: 'Check for [tool.coverage.run] in pyproject.toml'
+        uses: ./
+        id: cov-run
+        with:
+          flags: '-q -E'
+          regex: '^\[tool.coverage.run\]\$'
+          filename: "test-python-project/pyproject.toml"
+          no_fail: 'true'
+
+      - name: 'Invalid path [input: no_fail]'
+        uses: ./
+        id: no_fail
+        with:
+          flags: '-q -E'
+          regex: '^\[tool.coverage.run\]\$'
+          filename: "invalid.txt"
+          no_fail: 'true'
+
+      - name: 'Invalid path [Fail]'
+        uses: ./
+        id: failure
+        continue-on-error: true
+        with:
+          flags: '-q -E'
+          regex: '^\[tool.coverage.run\]\$'
+          filename: "invalid.txt"
+
+      # Failure testing is also important
+      - name: "Error if step above did NOT fail"
+        if: steps.failure.outcome == 'success'
+        shell: bash
+        run: |
+          # Error if step above did NOT fail
+          echo "Error: previous test step did NOT fail ❌"
+          exit 1
+
       - name: "Validate action output: ${{ github.repository }}"
         shell: bash
         run: |

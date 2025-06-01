@@ -2,36 +2,36 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2025 The Linux Foundation
 
-name: "Extract string from file using GREP"
-description: "Uses grep and a regular expression to extract text from files"
+name: 'Extract string from file using GREP'
+description: 'Uses grep and a regular expression to extract text from files'
 
 inputs:
   # Mandatory
-  REGEX:
-    description: "Regular expression used to extract string"
+  regex:
+    description: 'Regular expression used to extract string'
     required: true
-  FILENAME:
-    description: "File containing text to extract"
+  filename:
+    description: 'File containing text to extract'
     required: true
   # Optional
-  FLAGS:
-    description: "Flags to use with grep command"
+  flags:
+    description: 'Flags to use with grep command'
     required: false
-    default: "-E"
-  NO_FAIL:
-    description: "Override errors if file not found or no value returned"
+    default: '-E'
+  no_fail:
+    description: 'Override errors if file not found or no value returned'
     required: false
-    default: "false"
+    default: 'false'
 
 outputs:
-  EXTRACTED_STRING:
-    description: "The string extracted by the regular expression"
-    value: ${{ steps.grep.outputs.extracted_string }}
+  extracted_string:
+    description: 'The string extracted by the regular expression'
+    value: "${{ steps.grep.outputs.extracted_string }}"
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: "Extract text/string from file"
+    - name: 'Extract text/string from file'
       id: grep
       shell: bash
       run: |
@@ -40,14 +40,14 @@ runs:
         set -o pipefail
 
         set -o noglob
-        FLAGS="${{ inputs.FLAGS }}"
-        REGEX='${{ inputs.REGEX }}'
-        FILENAME="${{ inputs.FILENAME }}"
+        flags="${{ inputs.flags }}"
+        regex='${{ inputs.regex }}'
+        filename="${{ inputs.filename }}"
         set +o noglob
 
-        if [ ! -f "$FILENAME" ]; then
-          echo "Error: file not found [$FILENAME]"
-          if [ "${{ inputs.NO_FAIL }}" = "true" ]; then
+        if [ ! -f "$filename" ]; then
+          echo "Error: file not found [$filename]"
+          if [ "f${{ inputs.no_fail }}" = 'ftrue' ]; then
             exit 0
           else
             exit 1
@@ -56,18 +56,18 @@ runs:
 
         set -o noglob
 
-        echo "Regular expression to use: $REGEX"
-        echo "File to search: $FILENAME"
-        if [ -n "$FLAGS" ]; then
-          echo "Flags to grep command: $FLAGS"
+        echo "Regular expression to use: $regex"
+        echo "File to search: $filename"
+        if [ -n "$flags" ]; then
+          echo "Flags to grep command: $flags"
         fi
         # Extract the string using grep and regex
-        STRING=$(grep $FLAGS '${{ inputs.REGEX }}' $FILENAME)
+        string=$(grep $flags '${{ inputs.regex }}' "$filename" || true)
         set +o noglob
 
-        if [ -z "$STRING" ]; then
-          echo "String extraction failed; no matching value found ❌"
-          if [ "f${{ inputs.NO_FAIL }}" = "ftrue" ]; then
+        if [ -z "$string" ]; then
+          echo 'String extraction failed; no matching value found ❌'
+          if [ "f${{ inputs.no_fail }}" = 'ftrue' ]; then
             exit 0
           else
             exit 1
@@ -75,13 +75,13 @@ runs:
         else
           # Make multi-line string available as action output
           { echo 'extracted_string<<EOF'
-            echo "$STRING"
+            echo "$string"
             echo EOF
           } >> "$GITHUB_ENV"
           { echo 'extracted_string<<EOF'
-            echo "$STRING"
+            echo "$string"
             echo EOF
           } >> "$GITHUB_OUTPUT"
           echo "Extracted string ✅"
-          echo "$STRING"
+          echo "$string"
         fi
