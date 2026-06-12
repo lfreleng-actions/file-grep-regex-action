@@ -34,20 +34,25 @@ runs:
     - name: 'Extract text/string from file'
       id: grep
       shell: bash
+      env:
+        INPUT_FLAGS: ${{ inputs.flags }}
+        INPUT_REGEX: ${{ inputs.regex }}
+        INPUT_FILENAME: ${{ inputs.filename }}
+        INPUT_NO_FAIL: ${{ inputs.no_fail }}
       run: |
         # Extract text/string from file
 
         set -o pipefail
 
         set -o noglob
-        flags="${{ inputs.flags }}"
-        regex='${{ inputs.regex }}'
-        filename="${{ inputs.filename }}"
+        flags="$INPUT_FLAGS"
+        regex="$INPUT_REGEX"
+        filename="$INPUT_FILENAME"
         set +o noglob
 
         if [ ! -f "$filename" ]; then
           echo "Error: file not found [$filename]"
-          if [ "f${{ inputs.no_fail }}" = 'ftrue' ]; then
+          if [ "f$INPUT_NO_FAIL" = 'ftrue' ]; then
             exit 0
           else
             exit 1
@@ -61,13 +66,23 @@ runs:
         if [ -n "$flags" ]; then
           echo "Flags to grep command: $flags"
         fi
-        # Extract the string using grep and regex
-        string=$(grep $flags '${{ inputs.regex }}' "$filename" || true)
+        # Extract the string using grep and regex.
+        # Split user flags into an array (safe word-splitting under noglob),
+        # dropping any standalone '--' tokens (the script supplies its own
+        # below). Pass the pattern via -e and terminate options with -- so a
+        # regex or filename beginning with '-' cannot be parsed as an option.
+        read -ra raw_flags <<< "$flags"
+        grep_flags=()
+        for gf in "${raw_flags[@]}"; do
+          [ "$gf" = '--' ] && continue
+          grep_flags+=("$gf")
+        done
+        string=$(grep "${grep_flags[@]}" -e "$regex" -- "$filename" || true)
         set +o noglob
 
         if [ -z "$string" ]; then
           echo 'String extraction failed; no matching value found ❌'
-          if [ "f${{ inputs.no_fail }}" = 'ftrue' ]; then
+          if [ "f$INPUT_NO_FAIL" = 'ftrue' ]; then
             exit 0
           else
             exit 1
