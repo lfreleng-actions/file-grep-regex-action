@@ -33,11 +33,6 @@ jobs:
       contents: read
     timeout-minutes: 4
     steps:
-      - name: "Checkout repository"
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
       # Perform setup prior to running test(s)
       - name: "Checkout sample project repository"
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,14 +43,14 @@ jobs:
 
       - name: "Extract project name from pyproject.toml"
         id: test-grep
-        uses: ./
+        uses: $/
         with:
           flags: "-oP -m1"
           regex: '(?<=^name = ")([^"]*)'
           filename: "test-python-project/pyproject.toml"
 
       - name: 'Check for [tool.coverage.run] in pyproject.toml'
-        uses: ./
+        uses: $/
         id: cov-run
         with:
           flags: '-q -E'
@@ -64,7 +59,7 @@ jobs:
           no_fail: 'true'
 
       - name: 'Invalid path [input: no_fail]'
-        uses: ./
+        uses: $/
         id: no_fail
         with:
           flags: '-q -E'
@@ -73,7 +68,7 @@ jobs:
           no_fail: 'true'
 
       - name: 'Invalid path [Fail]'
-        uses: ./
+        uses: $/
         id: failure
         continue-on-error: true
         with:
