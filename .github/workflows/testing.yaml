@@ -53,10 +53,42 @@ jobs:
         uses: $/
         id: cov-run
         with:
-          flags: '-q -E'
-          regex: '^\[tool.coverage.run\]\$'
+          flags: '-E'
+          regex: '^\[tool\.coverage\.run\]$'
+          filename: "test-python-project/pyproject.toml"
+
+      - name: "Validate cov-run output"
+        shell: bash
+        env:
+          COV_RUN: "${{ steps.cov-run.outputs.extracted_string }}"
+        run: |
+          # Validate cov-run output
+          if [ "$COV_RUN" != '[tool.coverage.run]' ]; then
+            echo "Unexpected extracted_string: '$COV_RUN' ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"
+
+      - name: 'No match [input: no_fail]'
+        uses: $/
+        id: no-match
+        with:
+          flags: '-E'
+          regex: '^\[tool\.coverage\.nonexistent\]$'
           filename: "test-python-project/pyproject.toml"
           no_fail: 'true'
+
+      - name: "Validate no-match output is empty"
+        shell: bash
+        env:
+          NO_MATCH: "${{ steps.no-match.outputs.extracted_string }}"
+        run: |
+          # Validate no-match output is empty
+          if [ -n "$NO_MATCH" ]; then
+            echo "Unexpected extracted_string: '$NO_MATCH' ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"
 
       - name: 'Invalid path [input: no_fail]'
         uses: $/

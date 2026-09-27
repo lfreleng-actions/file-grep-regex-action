@@ -51,3 +51,6 @@ steps:
 | EXTRACTED_STRING | The string extracted by the regular expression |
 
 <!-- markdownlint-enable MD013 -->
+
+The action treats empty grep output as "no match". Flags that suppress
+output, such as `-q`, never return a value.
