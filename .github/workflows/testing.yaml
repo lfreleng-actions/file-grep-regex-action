@@ -101,3 +101,13 @@ jobs:
           else
             echo "Test passed ✅"
           fi
+
+      - name: "Validate action does not export to job environment"
+        shell: bash
+        run: |
+          # Validate action does not export to job environment
+          if [ -n "${extracted_string+set}" ]; then
+            echo "Error: extracted_string leaked into job environment ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"

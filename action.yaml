@@ -88,11 +88,7 @@ runs:
             exit 1
           fi
         else
-          # Make multi-line string available as action output
-          { echo 'extracted_string<<EOF'
-            echo "$string"
-            echo EOF
-          } >> "$GITHUB_ENV"
+          # Make multi-line string available as action output
           { echo 'extracted_string<<EOF'
             echo "$string"
             echo EOF
