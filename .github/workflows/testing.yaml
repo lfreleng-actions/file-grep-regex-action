@@ -53,10 +53,42 @@ jobs:
         uses: $/
         id: cov-run
         with:
-          flags: '-q -E'
-          regex: '^\[tool.coverage.run\]\$'
+          flags: '-E'
+          regex: '^\[tool\.coverage\.run\]$'
+          filename: "test-python-project/pyproject.toml"
+
+      - name: "Validate cov-run output"
+        shell: bash
+        env:
+          COV_RUN: "${{ steps.cov-run.outputs.extracted_string }}"
+        run: |
+          # Validate cov-run output
+          if [ "$COV_RUN" != '[tool.coverage.run]' ]; then
+            echo "Unexpected extracted_string: '$COV_RUN' ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"
+
+      - name: 'No match [input: no_fail]'
+        uses: $/
+        id: no-match
+        with:
+          flags: '-E'
+          regex: '^\[tool\.coverage\.nonexistent\]$'
           filename: "test-python-project/pyproject.toml"
           no_fail: 'true'
+
+      - name: "Validate no-match output is empty"
+        shell: bash
+        env:
+          NO_MATCH: "${{ steps.no-match.outputs.extracted_string }}"
+        run: |
+          # Validate no-match output is empty
+          if [ -n "$NO_MATCH" ]; then
+            echo "Unexpected extracted_string: '$NO_MATCH' ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"
 
       - name: 'Invalid path [input: no_fail]'
         uses: $/
@@ -101,3 +133,49 @@ jobs:
           else
             echo "Test passed ✅"
           fi
+
+      - name: "Validate action does not export to job environment"
+        shell: bash
+        run: |
+          # Validate action does not export to job environment
+          if [ -n "${extracted_string+set}" ]; then
+            echo "Error: extracted_string leaked into job environment ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"
+
+      # A multi-line match containing a bare 'EOF' line must not end the
+      # output value early or inject extra values
+      - name: "Create multi-line fixture containing EOF"
+        shell: bash
+        run: |
+          # Create multi-line fixture containing EOF
+          printf '%s\n' 'version = "1.0"' 'EOF' 'GREP_TEST_INJECTED=1' \
+            > multiline-fixture.txt
+
+      - name: "Extract multi-line match containing EOF"
+        id: multiline
+        uses: $/
+        with:
+          flags: "-A2"
+          regex: "^version"
+          filename: "multiline-fixture.txt"
+
+      - name: "Validate multi-line output"
+        shell: bash
+        env:
+          EXTRACTED_STRING: "${{ steps.multiline.outputs.extracted_string }}"
+        run: |
+          # Validate multi-line output
+          expected=$(cat multiline-fixture.txt)
+          if [ "$EXTRACTED_STRING" != "$expected" ]; then
+            echo "Unexpected multi-line output ❌"
+            echo "Returned: $EXTRACTED_STRING"
+            echo "Expected: $expected"
+            exit 1
+          fi
+          if [ -n "${GREP_TEST_INJECTED+set}" ]; then
+            echo "Error: matched content injected a variable ❌"
+            exit 1
+          fi
+          echo "Test passed ✅"

@@ -88,14 +88,14 @@ runs:
             exit 1
           fi
         else
-          # Make multi-line string available as action output
-          { echo 'extracted_string<<EOF'
-            echo "$string"
-            echo EOF
-          } >> "$GITHUB_ENV"
-          { echo 'extracted_string<<EOF'
-            echo "$string"
-            echo EOF
+          # Make multi-line string available as action output. Use a
+          # random per-run delimiter: a fixed one could appear as a line in
+          # the matched text, ending the value early and letting the lines
+          # after it be parsed as extra outputs.
+          delimiter="EOF_$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+          { printf 'extracted_string<<%s\n' "$delimiter"
+            printf '%s\n' "$string"
+            printf '%s\n' "$delimiter"
           } >> "$GITHUB_OUTPUT"
           echo "Extracted string ✅"
           echo "$string"
